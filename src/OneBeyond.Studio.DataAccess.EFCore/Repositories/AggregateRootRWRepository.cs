@@ -116,9 +116,7 @@ public class AggregateRootRWRepository<TDbContext, TAggregateRoot, TEntity, TEnt
             return query;
         }
         var includesTraits = includes.Replay(new IncludesTraits<TEntity>());
-        query = includesTraits.HaveWhereClause
-            ? includes.Replay(new EFPlusIncludes<TEntity>(query)).GetQuery() // Seems like EFCoreIncludes can be used all the time as they got support for Where
-            : includes.Replay(new EFCoreIncludes<TEntity>(query)).GetQuery();
+        query = includes.Replay(new EFCoreIncludes<TEntity>(query)).GetQuery();
         query = includes.HaveCartesianExplosion
             ? query.AsSplitQuery()
             : query;

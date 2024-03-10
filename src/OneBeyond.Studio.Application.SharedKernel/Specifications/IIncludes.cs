@@ -97,10 +97,4 @@ public interface IIncludes<TEntity, TChild> : IIncludes<TEntity>
     /// <returns></returns>
     IIncludes<TEntity, TNextChild> ThenInclude<TNextChild>(Expression<Func<TChild, IReadOnlyCollection<TNextChild>>> navigation)
         where TNextChild : class;
-
-    /// <summary>
-    /// </summary>
-    /// <param name="predicate"></param>
-    /// <returns></returns>
-    IIncludes<TEntity, TChild> Where(Expression<Func<TChild, bool>> predicate);
 }

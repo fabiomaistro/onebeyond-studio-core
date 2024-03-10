@@ -10,36 +10,28 @@ internal class IncludesTraits<TEntity>
     where TEntity : class
 {
     public IncludesTraits()
-        : this(false)
     {
     }
-
-    protected IncludesTraits(bool haveWhereClause)
-    {
-        HaveWhereClause = haveWhereClause;
-    }
-
-    public bool HaveWhereClause { get; protected set; }
 
     public IIncludes<TEntity, TChild> Include<TChild>(
         Expression<Func<TEntity, TChild>> navigation)
         where TChild : class
-        => new IncludesTraits<TEntity, TChild>(HaveWhereClause);
+        => new IncludesTraits<TEntity, TChild>();
 
     public IIncludes<TEntity, TChild> Include<TChild>(
         Expression<Func<TEntity, IEnumerable<TChild>>> navigation)
         where TChild : class
-        => new IncludesTraits<TEntity, TChild>(HaveWhereClause);
+        => new IncludesTraits<TEntity, TChild>();
 
     public IIncludes<TEntity, TChild> Include<TChild>(
         Expression<Func<TEntity, ICollection<TChild>>> navigation)
         where TChild : class
-        => new IncludesTraits<TEntity, TChild>(HaveWhereClause);
+        => new IncludesTraits<TEntity, TChild>();
 
     public IIncludes<TEntity, TChild> Include<TChild>(
         Expression<Func<TEntity, IReadOnlyCollection<TChild>>> navigation)
         where TChild : class
-        => new IncludesTraits<TEntity, TChild>(HaveWhereClause);
+        => new IncludesTraits<TEntity, TChild>();
 }
 
 internal sealed class IncludesTraits<TEntity, TChild>
@@ -47,34 +39,28 @@ internal sealed class IncludesTraits<TEntity, TChild>
     , IIncludes<TEntity, TChild>
     where TEntity : class
 {
-    public IncludesTraits(bool haveWhereClause)
-        : base(haveWhereClause)
+    public IncludesTraits()
+        : base()
     {
     }
 
     public IIncludes<TEntity, TNextChild> ThenInclude<TNextChild>(
         Expression<Func<TChild, TNextChild>> navigation)
         where TNextChild : class
-        => new IncludesTraits<TEntity, TNextChild>(HaveWhereClause);
+        => new IncludesTraits<TEntity, TNextChild>();
 
     public IIncludes<TEntity, TNextChild> ThenInclude<TNextChild>(
         Expression<Func<TChild, IEnumerable<TNextChild>>> navigation)
         where TNextChild : class
-        => new IncludesTraits<TEntity, TNextChild>(HaveWhereClause);
+        => new IncludesTraits<TEntity, TNextChild>();
 
     public IIncludes<TEntity, TNextChild> ThenInclude<TNextChild>(
         Expression<Func<TChild, ICollection<TNextChild>>> navigation)
         where TNextChild : class
-        => new IncludesTraits<TEntity, TNextChild>(HaveWhereClause);
+        => new IncludesTraits<TEntity, TNextChild>();
 
     public IIncludes<TEntity, TNextChild> ThenInclude<TNextChild>(
         Expression<Func<TChild, IReadOnlyCollection<TNextChild>>> navigation)
         where TNextChild : class
-        => new IncludesTraits<TEntity, TNextChild>(HaveWhereClause);
-
-    public IIncludes<TEntity, TChild> Where(Expression<Func<TChild, bool>> predicate)
-    {
-        HaveWhereClause = true;
-        return this;
-    }
+        => new IncludesTraits<TEntity, TNextChild>();
 }

@@ -132,7 +132,4 @@ internal sealed class Includes<TEntity, TChild>
             Expression.Lambda<Func<TChild, IEnumerable<TNextChild>>>(
                 EnsureArg.IsNotNull(navigation, nameof(navigation)).Body,
                 navigation.Parameters));
-
-    public IIncludes<TEntity, TChild> Where(Expression<Func<TChild, bool>> predicate)
-        => throw new InvalidOperationException($"Consider using {nameof(EFPlusIncludes<TEntity>)} includes");
 }

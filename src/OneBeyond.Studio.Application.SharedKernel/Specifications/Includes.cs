@@ -228,16 +228,6 @@ public class Includes<TEntity, TChild> : Includes<TEntity>, IIncludes<TEntity, T
                 navigation.Parameters));
 
     /// <summary>
-    /// </summary>
-    /// <param name="predicate"></param>
-    /// <returns></returns>
-    public Includes<TEntity, TChild> Where(Expression<Func<TChild, bool>> predicate)
-    {
-        _predicates.Add(predicate);
-        return this;
-    }
-
-    /// <summary>
     /// Replays the selected graph on another one.
     /// </summary>
     /// <typeparam name="TIncludes"></typeparam>
@@ -251,9 +241,6 @@ public class Includes<TEntity, TChild> : Includes<TEntity>, IIncludes<TEntity, T
         var updatedIncludes = _navigation1 == default
             ? includes.Include(_navigation2!)
             : includes.Include(_navigation1);
-        updatedIncludes = Predicates.Aggregate(
-            updatedIncludes,
-            (result, predicate) => result.Where(predicate));
         return (TIncludes)updatedIncludes;
     }
 
@@ -272,9 +259,6 @@ public class Includes<TEntity, TChild> : Includes<TEntity>, IIncludes<TEntity, T
     IIncludes<TEntity, TNextChild> IIncludes<TEntity, TChild>.ThenInclude<TNextChild>(
         Expression<Func<TChild, IReadOnlyCollection<TNextChild>>> navigation)
         => ThenInclude(navigation);
-
-    IIncludes<TEntity, TChild> IIncludes<TEntity, TChild>.Where(Expression<Func<TChild, bool>> predicate)
-        => Where(predicate);
 }
 
 /// <summary>
@@ -373,9 +357,6 @@ public class Includes<TEntity, TChild, TNextChild> : Includes<TEntity, TNextChil
         var updatedIncludes = _navigation1 == default
             ? ((IIncludes<TEntity, TChild>)includes).ThenInclude(_navigation2!)
             : ((IIncludes<TEntity, TChild>)includes).ThenInclude(_navigation1);
-        updatedIncludes = Predicates.Aggregate(
-            updatedIncludes,
-            (result, predicate) => result.Where(predicate));
         return (TIncludes)updatedIncludes;
     }
 }

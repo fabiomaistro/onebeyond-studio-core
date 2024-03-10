@@ -84,15 +84,14 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
                 .GetRequiredService<IRWRepository<PurchaseOrder, Guid>>();
 
             var includes = new Includes<PurchaseOrder>()
-                .Include((purchaseOrder) => purchaseOrder.Lines)
-                .Where((purchaseOrderLine) => purchaseOrderLine.ItemName.Contains('i'));
+                .Include((purchaseOrder) => purchaseOrder.Lines);
 
             var purchaseOrder = await purchaseOrderRWRepository.GetByIdAsync(
                 purchaseOrderId,
                 includes,
                 default);
 
-            Assert.AreEqual(2, purchaseOrder.Lines.Count());
+            Assert.AreEqual(3, purchaseOrder.Lines.Count());
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "First"));
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "Third"));
             Assert.AreEqual(0, purchaseOrder.Lines.SelectMany((purchaseOrderLine) => purchaseOrderLine.Comments).Count());
@@ -105,7 +104,6 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
 
             var includes = new Includes<PurchaseOrder>()
                 .Include((purchaseOrder) => purchaseOrder.Lines)
-                .Where((purchaseOrderLine) => purchaseOrderLine.ItemName.Contains('i'))
                     .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments);
 
             var purchaseOrder = await purchaseOrderRWRepository.GetByIdAsync(
@@ -113,10 +111,10 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
                 includes,
                 default);
 
-            Assert.AreEqual(2, purchaseOrder.Lines.Count());
+            Assert.AreEqual(3, purchaseOrder.Lines.Count());
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "First"));
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "Third"));
-            Assert.AreEqual(8, purchaseOrder.Lines.SelectMany((purchaseOrderLine) => purchaseOrderLine.Comments).Count());
+            Assert.AreEqual(12, purchaseOrder.Lines.SelectMany((purchaseOrderLine) => purchaseOrderLine.Comments).Count());
         }
 
         using (var serviceScope = ServiceProvider.CreateScope())
@@ -137,23 +135,20 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
 
             var includes = new Includes<PurchaseOrder>()
                 .Include((purchaseOrder) => purchaseOrder.Lines)
-                .Where((purchaseOrderLine) => purchaseOrderLine.ItemName.Contains('i'))
-                    .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments)
-                    //.Where((purchaseOrderLineComment) => !purchaseOrderLineComment.IsArchived);
-                    .Where((purchaseOrderLineComment) => purchaseOrderLineComment.Text.Contains('.'));
+                    .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments);
 
             var purchaseOrder = await purchaseOrderRWRepository.GetByIdAsync(
                 purchaseOrderId,
                 includes,
                 default);
 
-            Assert.AreEqual(2, purchaseOrder.Lines.Count());
+            Assert.AreEqual(3, purchaseOrder.Lines.Count());
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "First"));
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "Third"));
             var purchaseOrderLineComments = purchaseOrder.Lines
                 .SelectMany((purchaseOrderLine) => purchaseOrderLine.Comments)
                 .ToArray();
-            Assert.AreEqual(4, purchaseOrderLineComments.Length);
+            Assert.AreEqual(12, purchaseOrderLineComments.Length);
             Assert.IsTrue(purchaseOrderLineComments.Any((purchaseOrderLineComment) => purchaseOrderLineComment.Text == "1.1"));
             Assert.IsTrue(purchaseOrderLineComments.Any((purchaseOrderLineComment) => purchaseOrderLineComment.Text == "1.2"));
             Assert.IsTrue(purchaseOrderLineComments.Any((purchaseOrderLineComment) => purchaseOrderLineComment.Text == "3.1"));
@@ -241,7 +236,6 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
 
             var includes = new Includes<PurchaseOrder>()
                 .Include((purchaseOrder) => purchaseOrder.Lines)
-                .Where((purchaseOrderLine) => purchaseOrderLine.ItemName.Contains('i'))
                 .Include((purchaseOrder) => purchaseOrder.Tags);
 
             var purchaseOrder = await purchaseOrderRWRepository.GetByIdAsync(
@@ -249,7 +243,7 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
                 includes,
                 default);
 
-            Assert.AreEqual(2, purchaseOrder.Lines.Count());
+            Assert.AreEqual(3, purchaseOrder.Lines.Count());
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "First"));
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "Third"));
             Assert.AreEqual(0, purchaseOrder.Lines.SelectMany((purchaseOrderLine) => purchaseOrderLine.Comments).Count());
@@ -263,21 +257,19 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
 
             var includes = new Includes<PurchaseOrder>()
                 .Include((purchaseOrder) => purchaseOrder.Lines)
-                .Where((purchaseOrderLine) => purchaseOrderLine.ItemName.Contains('i'))
                     .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments)
-                .Include((purchaseOrder) => purchaseOrder.Tags)
-                .Where((purchaseOrderTag) => purchaseOrderTag.Description.Contains(".A"));
+                .Include((purchaseOrder) => purchaseOrder.Tags);
 
             var purchaseOrder = await purchaseOrderRWRepository.GetByIdAsync(
                 purchaseOrderId,
                 includes,
                 default);
 
-            Assert.AreEqual(2, purchaseOrder.Lines.Count());
+            Assert.AreEqual(3, purchaseOrder.Lines.Count());
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "First"));
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "Third"));
-            Assert.AreEqual(8, purchaseOrder.Lines.SelectMany((purchaseOrderLine) => purchaseOrderLine.Comments).Count());
-            Assert.AreEqual(2, purchaseOrder.Tags.Count);
+            Assert.AreEqual(12, purchaseOrder.Lines.SelectMany((purchaseOrderLine) => purchaseOrderLine.Comments).Count());
+            Assert.AreEqual(4, purchaseOrder.Tags.Count);
             Assert.IsTrue(purchaseOrder.Tags.Any((purchaseOrderTag) => purchaseOrderTag.Description == "Tag.1.A"));
             Assert.IsTrue(purchaseOrder.Tags.Any((purchaseOrderTag) => purchaseOrderTag.Description == "Tag.2.A"));
         }
@@ -300,30 +292,26 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
 
             var includes = new Includes<PurchaseOrder>()
                 .Include((purchaseOrder) => purchaseOrder.Lines)
-                .Where((purchaseOrderLine) => purchaseOrderLine.ItemName.Contains('i'))
                     .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments)
-                    //.Where((purchaseOrderLineComment) => !purchaseOrderLineComment.IsArchived);
-                    .Where((purchaseOrderLineComment) => purchaseOrderLineComment.Text.Contains('.'))
-                .Include((purchaseOrder) => purchaseOrder.Tags)
-                .Where((purchaseOrderTag) => purchaseOrderTag.Description.Contains(".B"));
+                .Include((purchaseOrder) => purchaseOrder.Tags);
 
             var purchaseOrder = await purchaseOrderRWRepository.GetByIdAsync(
                 purchaseOrderId,
                 includes,
                 default);
 
-            Assert.AreEqual(2, purchaseOrder.Lines.Count());
+            Assert.AreEqual(3, purchaseOrder.Lines.Count());
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "First"));
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "Third"));
             var purchaseOrderLineComments = purchaseOrder.Lines
                 .SelectMany((purchaseOrderLine) => purchaseOrderLine.Comments)
                 .ToArray();
-            Assert.AreEqual(4, purchaseOrderLineComments.Length);
+            Assert.AreEqual(12, purchaseOrderLineComments.Length);
             Assert.IsTrue(purchaseOrderLineComments.Any((purchaseOrderLineComment) => purchaseOrderLineComment.Text == "1.1"));
             Assert.IsTrue(purchaseOrderLineComments.Any((purchaseOrderLineComment) => purchaseOrderLineComment.Text == "1.2"));
             Assert.IsTrue(purchaseOrderLineComments.Any((purchaseOrderLineComment) => purchaseOrderLineComment.Text == "3.1"));
             Assert.IsTrue(purchaseOrderLineComments.Any((purchaseOrderLineComment) => purchaseOrderLineComment.Text == "3.2"));
-            Assert.AreEqual(2, purchaseOrder.Tags.Count);
+            Assert.AreEqual(4, purchaseOrder.Tags.Count);
             Assert.IsTrue(purchaseOrder.Tags.Any((purchaseOrderTag) => purchaseOrderTag.Description == "Tag.1.B"));
             Assert.IsTrue(purchaseOrder.Tags.Any((purchaseOrderTag) => purchaseOrderTag.Description == "Tag.2.B"));
         }
@@ -406,8 +394,7 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
                 .GetRequiredService<IRWRepository<PurchaseOrder, Guid>>();
 
             var includes = new Includes<PurchaseOrder>()
-                .Include((purchaseOrder) => purchaseOrder.Lines)
-                .Where((purchaseOrderLine) => purchaseOrderLine.ItemName.Contains('i'));
+                .Include((purchaseOrder) => purchaseOrder.Lines);
 
             var purchaseOrder = await purchaseOrderRWRepository.GetByIdAsync(
                 purchaseOrderId,
@@ -415,7 +402,7 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
                 default);
 
             Assert.IsNull(purchaseOrder.Vendor);
-            Assert.AreEqual(2, purchaseOrder.Lines.Count());
+            Assert.AreEqual(3, purchaseOrder.Lines.Count());
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "First"));
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "Third"));
             Assert.IsTrue(purchaseOrder.Lines.All((purchaseOrderLine) => purchaseOrderLine.Account is null));
@@ -438,7 +425,6 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
 
             var includes = new Includes<PurchaseOrder>()
                 .Include((purchaseOrder) => purchaseOrder.Lines)
-                .Where((purchaseOrderLine) => purchaseOrderLine.ItemName.Contains('i'))
                     .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Account!);
 
             var purchaseOrder = await purchaseOrderRWRepository.GetByIdAsync(
@@ -447,7 +433,7 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
                 default);
 
             Assert.IsNull(purchaseOrder.Vendor);
-            Assert.AreEqual(2, purchaseOrder.Lines.Count());
+            Assert.AreEqual(3, purchaseOrder.Lines.Count());
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "First"));
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "Third"));
             Assert.IsTrue(purchaseOrder.Lines.All((purchaseOrderLine) => purchaseOrderLine.Account is not null));
@@ -471,7 +457,6 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
 
             var includes = new Includes<PurchaseOrder>(true)
                 .Include((purchaseOrder) => purchaseOrder.Lines)
-                .Where((purchaseOrderLine) => purchaseOrderLine.ItemName.Contains('i'))
                     .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Account!)
                 .Include((purchaseOrder) => purchaseOrder.Vendor!);
 
@@ -481,7 +466,7 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
                 default);
 
             Assert.IsNotNull(purchaseOrder.Vendor);
-            Assert.AreEqual(2, purchaseOrder.Lines.Count());
+            Assert.AreEqual(3, purchaseOrder.Lines.Count());
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "First"));
             Assert.IsTrue(purchaseOrder.Lines.Any((purchaseOrderLine) => purchaseOrderLine.ItemName == "Third"));
             Assert.IsTrue(purchaseOrder.Lines.All((purchaseOrderLine) => purchaseOrderLine.Account is not null));
@@ -909,37 +894,25 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
         var includesTraits = new IncludesTraits<PurchaseOrder>();
         includesTraits = includes.Replay(includesTraits);
 
-        Assert.IsFalse(includesTraits.HaveWhereClause);
-
         includes = new Includes<PurchaseOrder>()
             .Include((purchaseOrder) => purchaseOrder.Lines)
-            .Where((purchaseOrderLine) => purchaseOrderLine.ItemName == "dd")
                 .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments);
 
         includesTraits = new IncludesTraits<PurchaseOrder>();
         includesTraits = includes.Replay(includesTraits);
 
-        Assert.IsTrue(includesTraits.HaveWhereClause);
-
         includes = new Includes<PurchaseOrder>()
             .Include((purchaseOrder) => purchaseOrder.Lines)
-                .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments)
-                .Where((purchaseOrderLineComment) => purchaseOrderLineComment.CreatedAt > DateTimeOffset.Now);
+                .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments);
 
         includesTraits = new IncludesTraits<PurchaseOrder>();
         includesTraits = includes.Replay(includesTraits);
 
-        Assert.IsTrue(includesTraits.HaveWhereClause);
-
         includes = new Includes<PurchaseOrder>()
             .Include((purchaseOrder) => purchaseOrder.Lines)
-            .Where((purchaseOrderLine) => purchaseOrderLine.ItemName == "dd")
-                .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments)
-                .Where((purchaseOrderLineComment) => purchaseOrderLineComment.CreatedAt > DateTimeOffset.Now);
+                .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments);
 
         includesTraits = new IncludesTraits<PurchaseOrder>();
         includesTraits = includes.Replay(includesTraits);
-
-        Assert.IsTrue(includesTraits.HaveWhereClause);
     }
 }

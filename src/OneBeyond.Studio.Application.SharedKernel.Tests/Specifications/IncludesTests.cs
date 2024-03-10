@@ -11,7 +11,7 @@ namespace OneBeyond.Studio.Application.SharedKernel.Tests.Specifications;
 public sealed class IncludesTests
 {
     [TestMethod]
-    public void TestIncludesWithWhere()
+    public void TestIncludes()
     {
         var includeList = new List<(Expression, IList<Expression>)>();
         var includes = new TestIncludes<SomeClass>(includeList) as IIncludes<SomeClass>;
@@ -24,18 +24,14 @@ public sealed class IncludesTests
 
         includes = includes
             .Include(includeSomeProperty4)
-            .Where(filterAnotherProperty1)
-                .ThenInclude((another) => another.AnotherProperty3)
             .Include(includeSomeProperty3)
-                .ThenInclude(includeAnotherProperty2)
-                .Where(filterYetAnotherProperty1);
+                .ThenInclude(includeAnotherProperty2);
 
-        Assert.AreEqual(4, includeList.Count);
+        Assert.AreEqual(3, includeList.Count);
 
         var some4 = includeList.Single((include) => include.Item1.Equals(includeSomeProperty4));
 
-        Assert.AreEqual(1, some4.Item2.Count);
-        Assert.AreEqual(filterAnotherProperty1, some4.Item2[0]);
+        Assert.AreEqual(0, some4.Item2.Count);
 
         var some3 = includeList.Single((include) => include.Item1.Equals(includeSomeProperty3));
 
@@ -43,8 +39,7 @@ public sealed class IncludesTests
 
         var another2 = includeList.Single((include) => include.Item1.Equals(includeAnotherProperty2));
 
-        Assert.AreEqual(1, another2.Item2.Count);
-        Assert.AreEqual(filterYetAnotherProperty1, another2.Item2[0]);
+        Assert.AreEqual(0, another2.Item2.Count);
     }
 
     [TestMethod]
