@@ -115,7 +115,6 @@ public class AggregateRootRWRepository<TDbContext, TAggregateRoot, TEntity, TEnt
         {
             return query;
         }
-        var includesTraits = includes.Replay(new IncludesTraits<TEntity>());
         query = includes.Replay(new EFCoreIncludes<TEntity>(query)).GetQuery();
         query = includes.HaveCartesianExplosion
             ? query.AsSplitQuery()

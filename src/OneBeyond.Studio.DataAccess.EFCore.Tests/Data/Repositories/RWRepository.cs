@@ -1,5 +1,3 @@
-using OneBeyond.Studio.Application.SharedKernel.DataAccessPolicies;
-using OneBeyond.Studio.DataAccess.EFCore.Projections;
 using OneBeyond.Studio.DataAccess.EFCore.Repositories;
 using OneBeyond.Studio.Domain.SharedKernel.Entities;
 
@@ -11,12 +9,8 @@ internal class RWRepository<TAggregateRoot, TAggregateRootId>
     where TAggregateRootId : notnull
 {
     public RWRepository(
-        DbContexts.DbContext dbContext,
-        IEntityTypeProjections<TAggregateRoot> entityTypeProjections)
-        : base(
-              dbContext,
-              new AllowDataAccessPolicyProvider<TAggregateRoot>(),
-              entityTypeProjections)
+        DbContexts.DbContext dbContext)
+        : base(dbContext)
     {
     }
 }

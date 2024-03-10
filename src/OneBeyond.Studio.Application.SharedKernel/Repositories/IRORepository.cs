@@ -22,35 +22,18 @@ public interface IRORepository<TEntity>
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<TResultDto>> ListAsync<TResultDto>(
-        Expression<Func<TEntity, bool>>? preFilter,
-        Expression<Func<TResultDto, bool>>? filter = default,
-        Paging? paging = default,
-        IReadOnlyCollection<Sorting<TResultDto>>? sortings = default,
-        CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyCollection<TResultDto>> ListAsync<TResultDto>(
         Expression<Func<TEntity, TResultDto>> projection,
-        Expression<Func<TEntity, bool>>? filter = default,
-        Paging? paging = default,
-        IReadOnlyCollection<Sorting<TEntity>>? sortings = default,
+        Expression<Func<TEntity, bool>>? filter = null,
+        Paging? paging = null,
+        IReadOnlyCollection<Sorting<TEntity>>? sortings = null,
         CancellationToken cancellationToken = default);
 
     Task<int> CountAsync(
         Expression<Func<TEntity, bool>>? filter = default,
         CancellationToken cancellationToken = default);
 
-    Task<int> CountAsync<TResultDto>(
-        Expression<Func<TEntity, bool>>? preFilter,
-        Expression<Func<TResultDto, bool>>? filter = default,
-        CancellationToken cancellationToken = default);
-
     Task<bool> AnyAsync(
         Expression<Func<TEntity, bool>>? filter = default,
-        CancellationToken cancellationToken = default);
-
-    Task<bool> AnyAsync<TResultDto>(
-        Expression<Func<TEntity, bool>>? preFilter,
-        Expression<Func<TResultDto, bool>>? filter = default,
         CancellationToken cancellationToken = default);
 }
 
@@ -64,10 +47,6 @@ public interface IRORepository<TEntity, TEntityId> : IRORepository<TEntity>
     Task<TEntity> GetByIdAsync(
         TEntityId entityId,
         Includes<TEntity>? includes,
-        CancellationToken cancellationToken);
-
-    Task<TResultDto> GetByIdAsync<TResultDto>(
-        TEntityId entityId,
         CancellationToken cancellationToken);
 
     Task<TResultDto> GetByIdAsync<TResultDto>(

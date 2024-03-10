@@ -8,13 +8,10 @@ using System.Threading.Tasks;
 using DelegateDecompiler.EntityFrameworkCore;
 using EnsureThat;
 using Microsoft.EntityFrameworkCore;
-using Nito.AsyncEx;
-using OneBeyond.Studio.Application.SharedKernel.DataAccessPolicies;
 using OneBeyond.Studio.Application.SharedKernel.Repositories;
 using OneBeyond.Studio.Application.SharedKernel.Repositories.Exceptions;
 using OneBeyond.Studio.Application.SharedKernel.Specifications;
 using OneBeyond.Studio.Domain.SharedKernel.Entities;
-using OneBeyond.Studio.DataAccess.EFCore.Projections;
 using OneBeyond.Studio.Domain.SharedKernel.Specifications;
 
 namespace OneBeyond.Studio.DataAccess.EFCore.Repositories;
@@ -30,26 +27,16 @@ public class BaseRORepository<TDbContext, TEntity> : IRORepository<TEntity>
     where TEntity : class
 {
     public BaseRORepository(
-        TDbContext dbContext,
-        IRODataAccessPolicyProvider<TEntity> roDataAccessPolicyProvider,
-        IEntityTypeProjections<TEntity> entityTypeProjections)
+        TDbContext dbContext)
     {
         EnsureArg.IsNotNull(dbContext, nameof(dbContext));
-        EnsureArg.IsNotNull(roDataAccessPolicyProvider, nameof(roDataAccessPolicyProvider));
-        EnsureArg.IsNotNull(entityTypeProjections, nameof(entityTypeProjections));
 
         DbContext = dbContext;
-        ReadDataAccessPolicy = new AsyncLazy<DataAccessPolicy<TEntity>?>(
-            () => roDataAccessPolicyProvider.GetReadDataAccessPolicyAsync(),
-            AsyncLazyFlags.RetryOnFailure);
         DbSet = new Lazy<DbSet<TEntity>>(() => DbContext.Set<TEntity>());
-        EntityTypeProjections = entityTypeProjections;
     }
 
     protected TDbContext DbContext { get; }
     protected Lazy<DbSet<TEntity>> DbSet { get; }
-    protected AsyncLazy<DataAccessPolicy<TEntity>?> ReadDataAccessPolicy { get; }
-    protected IEntityTypeProjections<TEntity> EntityTypeProjections { get; }
 
     public async Task<IReadOnlyCollection<TEntity>> ListAsync(
         Expression<Func<TEntity, bool>>? filter = null,
@@ -61,19 +48,6 @@ public class BaseRORepository<TDbContext, TEntity> : IRORepository<TEntity>
         var query = await BuildListQueryAsync(default, includes).ConfigureAwait(false);
         query = CompleteListQuery(query, filter, sortings, paging);
         return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    public async Task<IReadOnlyCollection<TResultDto>> ListAsync<TResultDto>(
-        Expression<Func<TEntity, bool>>? preFilter,
-        Expression<Func<TResultDto, bool>>? filter = null,
-        Paging? paging = null,
-        IReadOnlyCollection<Sorting<TResultDto>>? sortings = null,
-        CancellationToken cancellationToken = default)
-    {
-        var entityQuery = await BuildListQueryAsync(preFilter).ConfigureAwait(false);
-        var resultQuery = EntityTypeProjections.ProjectTo<TResultDto>(entityQuery, DbContext);
-        resultQuery = CompleteListQuery(resultQuery, filter, sortings, paging);
-        return await resultQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyCollection<TResultDto>> ListAsync<TResultDto>(
@@ -99,17 +73,6 @@ public class BaseRORepository<TDbContext, TEntity> : IRORepository<TEntity>
         return await query.CountAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<int> CountAsync<TResultDto>(
-        Expression<Func<TEntity, bool>>? preFilter,
-        Expression<Func<TResultDto, bool>>? filter = null,
-        CancellationToken cancellationToken = default)
-    {
-        var entityQuery = await BuildListQueryAsync(preFilter).ConfigureAwait(false);
-        var resultQuery = EntityTypeProjections.ProjectTo<TResultDto>(entityQuery, DbContext);
-        resultQuery = CompleteListQuery(resultQuery, filter);
-        return await resultQuery.CountAsync(cancellationToken).ConfigureAwait(false);
-    }
-
     public async Task<bool> AnyAsync(
         Expression<Func<TEntity, bool>>? filter = null,
         CancellationToken cancellationToken = default)
@@ -119,25 +82,12 @@ public class BaseRORepository<TDbContext, TEntity> : IRORepository<TEntity>
         return await query.AnyAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<bool> AnyAsync<TResultDto>(
-        Expression<Func<TEntity, bool>>? preFilter,
-        Expression<Func<TResultDto, bool>>? filter = null,
-        CancellationToken cancellationToken = default)
-    {
-        var entityQuery = await BuildListQueryAsync(preFilter).ConfigureAwait(false);
-        var resultQuery = EntityTypeProjections.ProjectTo<TResultDto>(entityQuery, DbContext);
-        resultQuery = CompleteListQuery(resultQuery, filter);
-        return await resultQuery.AnyAsync(cancellationToken).ConfigureAwait(false);
-    }
-
     protected async Task<IQueryable<TEntity>> BuildListQueryAsync(
         Expression<Func<TEntity, bool>>? filter = default,
         Includes<TEntity>? includes = default)
     {
-        var readDataAccessPolicy = await ReadDataAccessPolicy.Task.ConfigureAwait(false);
         var query = ApplyIncludes(DbSet.Value, includes);
         query = ApplyFiltering(query, filter);
-        query = ApplyFiltering(query, readDataAccessPolicy?.CanBeAccessedCriteria);
         return query.AsNoTracking();
     }
 
@@ -218,7 +168,6 @@ public class BaseRORepository<TDbContext, TEntity> : IRORepository<TEntity>
         {
             return query;
         }
-        var includesTraits = includes.Replay(new IncludesTraits<TEntity>());
         query = includes.Replay(new EFCoreIncludes<TEntity>(query)).GetQuery();
         query = includes.HaveCartesianExplosion
             ? query.AsSplitQuery()
@@ -236,10 +185,8 @@ public class BaseRORepository<TDbContext, TEntity, TEntityId>
     where TEntityId : notnull
 {
     public BaseRORepository(
-        TDbContext dbContext,
-        IRODataAccessPolicyProvider<TEntity> roDataAccessPolicyProvider,
-        IEntityTypeProjections<TEntity> entityTypeProjections)
-        : base(dbContext, roDataAccessPolicyProvider, entityTypeProjections)
+        TDbContext dbContext)
+        : base(dbContext)
     {
     }
 
@@ -258,26 +205,6 @@ public class BaseRORepository<TDbContext, TEntity, TEntityId>
                 cancellationToken).ConfigureAwait(false);
         }
         return entity!;
-    }
-
-    public async Task<TResultDto> GetByIdAsync<TResultDto>(
-        TEntityId entityId,
-        CancellationToken cancellationToken)
-    {
-        var query = await BuildGetByIdQueryAsync(entityId, default).ConfigureAwait(false);
-        var entityDto = await EntityTypeProjections.ProjectTo<TResultDto>(query, DbContext)
-            .SingleOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        if (EqualityComparer<TResultDto>.Default.Equals(entityDto, default!))
-        {
-            await EnsureEntityExistsAsync(
-                entityId,
-                (entity) => entity.Id!.Equals(entityId),
-                cancellationToken).ConfigureAwait(false);
-        }
-
-        return entityDto!;
     }
 
     public async Task<TResultDto> GetByIdAsync<TResultDto>(
@@ -305,10 +232,8 @@ public class BaseRORepository<TDbContext, TEntity, TEntityId>
         TEntityId id,
         Includes<TEntity>? includes)
     {
-        var readDataAccessPolicy = await ReadDataAccessPolicy.Task.ConfigureAwait(false);
         var query = ApplyIncludes(DbSet.Value, includes);
         query = ApplyFiltering(query, (e) => e.Id!.Equals(id));
-        query = ApplyFiltering(query, readDataAccessPolicy?.CanBeAccessedCriteria);
         return query.AsNoTracking().DecompileAsync();
     }
 
@@ -317,23 +242,13 @@ public class BaseRORepository<TDbContext, TEntity, TEntityId>
         Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken)
     {
-        var readDataAccessPolicy = await ReadDataAccessPolicy.Task.ConfigureAwait(false);
-        if (readDataAccessPolicy?.CanBeAccessedCriteria is null
-            || !await DbSet.Value.AnyAsync(filter, cancellationToken).ConfigureAwait(false))
+        if (!await DbSet.Value.AnyAsync(filter, cancellationToken).ConfigureAwait(false))
         {
             if (EqualityComparer<TEntityId>.Default.Equals(entityId, default!))
             {
                 throw new EntityNotFoundException<TEntity, TEntityId>();
             }
             throw new EntityNotFoundException<TEntity, TEntityId>(entityId);
-        }
-        else
-        {
-            if (EqualityComparer<TEntityId>.Default.Equals(entityId, default!))
-            {
-                throw new EntityAccessDeniedException<TEntity, TEntityId>();
-            }
-            throw new EntityAccessDeniedException<TEntity, TEntityId>(entityId);
         }
     }
 }

@@ -48,5 +48,5 @@ public class GetByIdHandler<TResultDto, TEntity, TEntityId>
     protected virtual Task<TResultDto> HandleAsync(
         GetById<TResultDto, TEntity, TEntityId> query,
         CancellationToken cancellationToken)
-        => RoRepository.GetByIdAsync<TResultDto>(query.EntityId, cancellationToken);
+        => RoRepository.GetByIdAsync<TResultDto>(query.EntityId, x => default!, cancellationToken);
 }

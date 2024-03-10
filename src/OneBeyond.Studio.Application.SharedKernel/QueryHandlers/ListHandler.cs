@@ -86,19 +86,21 @@ public abstract class ListHandler<TQuery, TResultDto, TEntity, TEntityId>
 
         var sorting = sortExpressions;
 
-        var pagedList = new PagedList<TResultDto>
-        {
-            Data = await Repository.ListAsync(
-                preFilterExpression,
-                filterExpression,
-                paging,
-                sorting,
-                cancellationToken).ConfigureAwait(false),
-            Count = await Repository.CountAsync(
-                preFilterExpression,
-                filterExpression,
-                cancellationToken).ConfigureAwait(false)
-        };
+        //var pagedList = new PagedList<TResultDto>
+        //{
+        //    Data = await Repository.ListAsync(
+        //        x => default,
+        //        filterExpression,
+        //        paging,
+        //        sorting,
+        //        cancellationToken).ConfigureAwait(false),
+        //    Count = await Repository.CountAsync(
+        //        preFilterExpression,
+        //        filterExpression,
+        //        cancellationToken).ConfigureAwait(false)
+        //};
+
+        var pagedList = new PagedList<TResultDto> { };
 
         return pagedList;
     }

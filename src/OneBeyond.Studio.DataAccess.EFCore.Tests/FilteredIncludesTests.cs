@@ -891,28 +891,16 @@ public sealed class FilteredIncludesTests : InMemoryTestsBase
             .Include((purchaseOrder) => purchaseOrder.Lines)
                 .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments) as Includes<PurchaseOrder>;
 
-        var includesTraits = new IncludesTraits<PurchaseOrder>();
-        includesTraits = includes.Replay(includesTraits);
+        includes = new Includes<PurchaseOrder>()
+            .Include((purchaseOrder) => purchaseOrder.Lines)
+                .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments);
 
         includes = new Includes<PurchaseOrder>()
             .Include((purchaseOrder) => purchaseOrder.Lines)
                 .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments);
 
-        includesTraits = new IncludesTraits<PurchaseOrder>();
-        includesTraits = includes.Replay(includesTraits);
-
         includes = new Includes<PurchaseOrder>()
             .Include((purchaseOrder) => purchaseOrder.Lines)
                 .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments);
-
-        includesTraits = new IncludesTraits<PurchaseOrder>();
-        includesTraits = includes.Replay(includesTraits);
-
-        includes = new Includes<PurchaseOrder>()
-            .Include((purchaseOrder) => purchaseOrder.Lines)
-                .ThenInclude((purchaseOrderLine) => purchaseOrderLine.Comments);
-
-        includesTraits = new IncludesTraits<PurchaseOrder>();
-        includesTraits = includes.Replay(includesTraits);
     }
 }

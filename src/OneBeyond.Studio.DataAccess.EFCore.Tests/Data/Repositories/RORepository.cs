@@ -11,12 +11,9 @@ internal class RORepository<TEntity, TEntityId>
     where TEntityId : notnull
 {
     public RORepository(
-        DbContexts.DbContext dbContext,
-        IEntityTypeProjections<TEntity> entityTypeProjections)
+        DbContexts.DbContext dbContext)
         : base(
-              dbContext,
-              new AllowDataAccessPolicyProvider<TEntity>(),
-              entityTypeProjections)
+              dbContext)
     {
     }
 }
